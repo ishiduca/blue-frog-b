@@ -1,11 +1,15 @@
 {
   "name": "blue-frog-b",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "create a JSON-RPC 2.0 server/client that corresponds to the batch processing",
   "main": "index.js",
   "browser": "browser.js",
   "scripts": {
     "test": "tape t/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ishiduca/blue-frog-b.git"
   },
   "keywords": [
     "jsonrpc",
