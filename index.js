@@ -1,6 +1,7 @@
 var events   = require('events')
 var url      = require('url')
 var inherits = require('inherits')
+var through  = require('through2')
 var body     = require('body/json')
 var rpc      = require('blue-frog-stream')
 var response = require('blue-frog-core/response')
@@ -33,11 +34,13 @@ function handler (req, res) {
         batch.on('error', function (err) {
             me.emit('error', err)
         })
-        .once('data', function (json) {
+        .pipe(through.obj(function (json, _, done) {
+            res.setHeader('accept', 'application/json')
             res.setHeader('content-type', 'application/json')
             res.setHeader('content-length', Buffer.byteLength(json))
-            res.end(json)           
-        })
+            done(null, json)
+        }))
+        .pipe(res)
 
         if (err) return batch.end(parseError(err))
 
@@ -46,7 +49,7 @@ function handler (req, res) {
         .on('error', function (err) {
             batch.write(invalidRequest(err))
         })
-        .on('data', function (req) {
+        .pipe(through.obj(function (req, _, done) {
             ps.push(new Promise(function (onSuccess) {
                 if (! me.emit(req.method, req.params, done))
                     onSuccess(methodNotFound(req))
@@ -56,17 +59,19 @@ function handler (req, res) {
                     else onSuccess(response(req.id, result))
                 }
             }))
-        })
-        .once('end', function () {
+            done()
+        }, function (done) {
             var that = this
             Promise.all(ps).then(function (results) {
                 results.forEach(function (result) {
-                    if (result.id) batch.write(result)
-                    else if (result.error) batch.write(result)
+                    if (result.id) that.push(result)
+                    else if (result.error) that.push(result)
                 })
-                batch.end()
+                that.push(null)
+                done()
             })
-        })
+        }))
+        .pipe(batch)
     })
 
     return true

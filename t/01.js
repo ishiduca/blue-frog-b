@@ -111,18 +111,30 @@ require('./app')(port, (app) => {
     })
 
     test(`POST ${uri} # with notification`, t => {
-        app.once('close', () => setTimeout(() => t.end(), 500))
-
         const batch = setup((err, results) => {
             t.notOk(err, 'no exists error')
             t.is(results.length, 2, 'get 2 success')
             t.deepEqual(results[0], {jsonrpc: "2.0", id: 123, result: 6}, 'id 123 -> result: 6')
             t.deepEqual(results[1], {jsonrpc: "2.0", id: 456, result: 120}, 'id 456 -> result: 120')
-            app.close()
+            t.end()
         })
 
         batch.write(request(123, 'sum', [1,2,3]))
         batch.write(request(456, 'multi', [4, 5, 6]))
+        batch.end(  request.notification('reverse', [7,8,9]))
+    })
+
+    test(`POST ${uri} # only notification`, t => {
+        app.once('close', () => setTimeout(() => t.end(), 500))
+
+        const batch = setup((err, results) => {
+            t.ok(1, 'get http.response')
+            t.ok(/SyntaxError.*?Unexpected end of input/.test(String(err)), 'only notification then response.body is empty - ' + String(err))
+            app.close()
+        })
+
+        batch.write(request.notification('sum', [1,2,3]))
+        batch.write(request.notification('multi', [4, 5, 6]))
         batch.end(  request.notification('reverse', [7,8,9]))
     })
 })

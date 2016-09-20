@@ -1,6 +1,6 @@
 {
   "name": "blue-frog-b",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "create a JSON-RPC 2.0 server/client that corresponds to the batch processing",
   "main": "index.js",
   "browser": "browser.js",
@@ -26,6 +26,7 @@
     "body": "^5.1.0",
     "inherits": "^2.0.3",
     "readable-stream": "^2.1.5",
+    "through2": "^2.0.1",
     "uuid": "^2.0.2"
   }
 }

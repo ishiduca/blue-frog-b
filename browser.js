@@ -32,6 +32,9 @@ Frog.prototype.end = function (chunk) {
 
     var me = this
     var str = me.bufferList.toString()
+
+    if (! str) return this.emit('parseEnd')
+
     var result; try {
         result = JSON.parse(str)
     } catch (err) {

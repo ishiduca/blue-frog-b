@@ -129,7 +129,6 @@ require('./app')(port, (app) => {
             t.is(errs[1].code, -32601, 'error.code eq -32601')
             t.is(errs[1].message, 'Method not found', 'error.message "Method not found"')
             t.is(spy.length, 0, 'get 0 response(success)')
-            app.close()
             t.end()
 
         }).on('error', onError)
@@ -147,6 +146,39 @@ require('./app')(port, (app) => {
         b.batch([sum, mul])
 
         function onError (err) {
+            errs.push(err)
+        }
+    })
+
+    test(`POST ${uri} # no exists errors, no exists success`, t => {
+        app.once('close', t.end.bind(t))
+
+        var spy  = []
+        var errs = []
+
+        var b = getClient(function () {
+            t.ok(1, '"parseEnd" event is emited')
+            setTimeout(function () {
+                t.is(errs.length, 0, 'no exists error')
+                t.is(spy.length, 0, 'no exists response(success)')
+                app.close()
+            }, 500)
+        }).on('error', onError)
+
+        var sum  = b.notification('sum',   [1,2,3]).on('error', onError)
+        var mul  = b.notification('multi', [4,5]).on('error', onError)
+
+        sum.on('data', function (result) {
+            spy.push({method: 'sum', result: result})
+        })
+        mul.on('data', function (result) {
+            spy.push({method: 'multi', result: result})
+        })
+
+        b.batch([sum, mul])
+
+        function onError (err) {
+            console.log(err)
             errs.push(err)
         }
     })
